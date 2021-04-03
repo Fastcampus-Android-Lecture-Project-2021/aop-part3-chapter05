@@ -27,7 +27,7 @@ class LikeActivity : AppCompatActivity(), CardStackListener {
 
 
         val currentUserDB = usersDb.child(getCurrentUserID())
-        currentUserDB.addListenerForSingleValueEvent(object:ValueEventListener {
+        currentUserDB.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.child("name").value == null) {
                     showNameInputPopup()
@@ -69,7 +69,8 @@ class LikeActivity : AppCompatActivity(), CardStackListener {
             override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
                 if (dataSnapshot.child("userId").value != getCurrentUserID()
                     && dataSnapshot.child("likedBy").child("like").hasChild(getCurrentUserID()).not()
-                    && dataSnapshot.child("likedBy").child("disLike").hasChild(getCurrentUserID()).not()) {
+                    && dataSnapshot.child("likedBy").child("disLike").hasChild(getCurrentUserID()).not()
+                ) {
 
                     val userId = dataSnapshot.child("userId").value.toString()
                     var name = "undecided"
@@ -118,27 +119,45 @@ class LikeActivity : AppCompatActivity(), CardStackListener {
         getUnSelectedUsers()
     }
 
-    override fun onCardDragging(direction: Direction?, ratio: Float) {
+    private fun like() {
+        val card = cardItems[manager.topPosition - 1]
 
+        usersDb.child(card.userId)
+            .child("likedBy")
+            .child("like")
+            .child(getCurrentUserID())
+            .setValue(true)
+
+        Toast.makeText(this, "Like 하셨습니다.", Toast.LENGTH_SHORT).show()
     }
+
+    private fun disLike() {
+        val card = cardItems[manager.topPosition - 1]
+
+        usersDb.child(card.userId)
+            .child("likedBy")
+            .child("disLike")
+            .child(getCurrentUserID())
+            .setValue(true)
+
+        Toast.makeText(this, "DisLike 하셨습니다.", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onCardDragging(direction: Direction?, ratio: Float) {}
 
     override fun onCardSwiped(direction: Direction?) {
-
+        when (direction) {
+            Direction.Right -> like()
+            Direction.Left -> disLike()
+            else -> {}
+        }
     }
 
-    override fun onCardRewound() {
+    override fun onCardRewound() {}
 
-    }
+    override fun onCardCanceled() {}
 
-    override fun onCardCanceled() {
+    override fun onCardAppeared(view: View?, position: Int) {}
 
-    }
-
-    override fun onCardAppeared(view: View?, position: Int) {
-
-    }
-
-    override fun onCardDisappeared(view: View?, position: Int) {
-
-    }
+    override fun onCardDisappeared(view: View?, position: Int) {}
 }
