@@ -1,17 +1,23 @@
 package fastcampus.aop.part3.aop_part3_chapter05_final
 
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.yuyakaido.android.cardstackview.*
 
-class LikeActivity : AppCompatActivity() {
+class LikeActivity : AppCompatActivity(), CardStackListener {
 
     private lateinit var usersDb: DatabaseReference
     private var auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val adapter = CardStackAdapter()
+    private val cardItems = mutableListOf<CardItem>()
+
+    private val manager by lazy { CardStackLayoutManager(this, this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +43,16 @@ class LikeActivity : AppCompatActivity() {
         })
 
 
+        val cardStackView = findViewById<CardStackView>(R.id.cardStackView)
+
+
+        manager.setStackFrom(StackFrom.Top)
+        manager.setTranslationInterval(8.0f)
+        manager.setSwipeThreshold(0.1f)
+
+        cardStackView.layoutManager = manager
+        cardStackView.adapter = adapter
+
     }
 
     private fun getCurrentUserID(): String {
@@ -55,10 +71,14 @@ class LikeActivity : AppCompatActivity() {
                     && dataSnapshot.child("likedBy").child("like").hasChild(getCurrentUserID()).not()
                     && dataSnapshot.child("likedBy").child("disLike").hasChild(getCurrentUserID()).not()) {
 
+                    val userId = dataSnapshot.child("userId").value.toString()
                     var name = "undecided"
                     if (dataSnapshot.child("name").value != null) {
                         name = dataSnapshot.child("name").value.toString()
                     }
+
+                    cardItems.add(CardItem(userId, name))
+                    adapter.submitList(cardItems)
                 }
             }
 
@@ -96,5 +116,29 @@ class LikeActivity : AppCompatActivity() {
         currentUserDb.updateChildren(user)
 
         getUnSelectedUsers()
+    }
+
+    override fun onCardDragging(direction: Direction?, ratio: Float) {
+
+    }
+
+    override fun onCardSwiped(direction: Direction?) {
+
+    }
+
+    override fun onCardRewound() {
+
+    }
+
+    override fun onCardCanceled() {
+
+    }
+
+    override fun onCardAppeared(view: View?, position: Int) {
+
+    }
+
+    override fun onCardDisappeared(view: View?, position: Int) {
+
     }
 }
