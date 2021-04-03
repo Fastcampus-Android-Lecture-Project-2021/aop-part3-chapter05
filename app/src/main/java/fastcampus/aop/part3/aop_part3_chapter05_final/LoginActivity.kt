@@ -1,5 +1,6 @@
 package fastcampus.aop.part3.aop_part3_chapter05_final
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -7,6 +8,13 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
+import com.facebook.AccessToken
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginResult
+import com.facebook.login.widget.LoginButton
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -14,6 +22,7 @@ import com.google.firebase.ktx.Firebase
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var callbackManager: CallbackManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +34,7 @@ class LoginActivity : AppCompatActivity() {
         val passwordEditText = findViewById<EditText>(R.id.passwordEditText)
         val loginButton = findViewById<Button>(R.id.loginButton)
         val signUpButton = findViewById<Button>(R.id.signUpButton)
+        val facebookLoginButton = findViewById<LoginButton>(R.id.facebookLoginButton)
 
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString()
@@ -67,7 +77,42 @@ class LoginActivity : AppCompatActivity() {
 
         }
 
+        callbackManager = CallbackManager.Factory.create()
+        facebookLoginButton.setPermissions("email", "public_profile")
+        facebookLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(loginResult: LoginResult) {
+                Log.d("Facebook", "facebook:onSuccess:$loginResult")
+                handleFacebookAccessToken(loginResult.accessToken)
+            }
+
+            override fun onCancel() {
+                Log.d("Facebook", "facebook:onCancel")
+            }
+
+            override fun onError(error: FacebookException) {
+                Log.d("Facebook", "facebook:onError", error)
+                Toast.makeText(this@LoginActivity, "페이스북 로그인에 실패했습니다. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        })
 
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Pass the activity result back to the Facebook SDK
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun handleFacebookAccessToken(token: AccessToken) {
+        val credential = FacebookAuthProvider.getCredential(token.token)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    finish()
+                } else {
+                    Toast.makeText(this, "페이스북 로그인에 실패했습니다. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
 }

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">aop-part3-chapter05-final</string>
+    <string name="facebook_app_id">872022016675935</string>
+    <string name="fb_login_protocol_scheme">fb872022016675935</string>
 </resources>
