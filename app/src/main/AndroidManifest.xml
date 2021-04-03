@@ -40,6 +40,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".LikeActivity"/>
+        <activity android:name=".MatchListActivity"/>
     </application>
 
 </manifest>

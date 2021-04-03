@@ -1,7 +1,9 @@
 package fastcampus.aop.part3.aop_part3_chapter05_final
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -52,6 +54,19 @@ class LikeActivity : AppCompatActivity(), CardStackListener {
 
         cardStackView.layoutManager = manager
         cardStackView.adapter = adapter
+
+        val signOutButton = findViewById<Button>(R.id.signOutButton)
+        signOutButton.setOnClickListener {
+            auth.signOut()
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
+
+
+        val matchListButton = findViewById<Button>(R.id.matchListButton)
+        matchListButton.setOnClickListener {
+            startActivity(Intent(this, MatchListActivity::class.java))
+        }
 
     }
 
@@ -128,7 +143,34 @@ class LikeActivity : AppCompatActivity(), CardStackListener {
             .child(getCurrentUserID())
             .setValue(true)
 
+        saveMatchIfOtherLikeMe(card.userId)
+
         Toast.makeText(this, "Like 하셨습니다.", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun saveMatchIfOtherLikeMe(otherUserId: String) {
+        val otherUserDB = usersDb.child(getCurrentUserID()).child("likedBy").child("like").child(otherUserId)
+        otherUserDB.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.value == true) {
+                    usersDb.child(getCurrentUserID())
+                        .child("likedBy")
+                        .child("match")
+                        .child(otherUserId)
+                        .setValue(true)
+
+                    usersDb.child(otherUserId)
+                        .child("likedBy")
+                        .child("match")
+                        .child(getCurrentUserID())
+                        .setValue(true)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+
+        })
+
     }
 
     private fun disLike() {
